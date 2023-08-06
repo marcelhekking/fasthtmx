@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from fastapi.responses import HTMLResponse
 
 from db.database import SessionLocal, engine
 from schema import schema
@@ -31,72 +32,105 @@ def get_db():
         db.close()
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def home_page(request: Request, db: Session = Depends((get_db))):
     vm = homeviewmodel.HomeViewModel(db=db)
     books = vm.books
-    return templates.TemplateResponse('home/index.html', {"request": request, "books": books})
+    return templates.TemplateResponse(
+        "home/index.html", {"request": request, "books": books}
+    )
 
 
-@app.get("/author/add")
+@app.get("/author/add", response_class=HTMLResponse)
 def authors_add(request: Request):
-    return templates.TemplateResponse('authors/partials/add_authors_form.html', {"request": request})
+    return templates.TemplateResponse(
+        "authors/partials/add_authors_form.html", {"request": request}
+    )
 
 
-@app.post("/authors/add")
-def create_author(request: Request, email: str = Form(...), first_name: str = Form(...), last_name: str = Form(...), db: Session = Depends(get_db)):
+@app.post("/authors/add", response_class=HTMLResponse)
+def create_author(
+    request: Request,
+    email: str = Form(...),
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    db: Session = Depends(get_db),
+):
     db_author = dbs.get_author_by_email(db, email=email)
     if db_author:
         raise HTTPException(status_code=400, detail="Email already registered")
-    author = schema.AuthorCreate(last_name=last_name, first_name=first_name, email=email)
+    author = schema.AuthorCreate(
+        last_name=last_name, first_name=first_name, email=email
+    )
     dbs.create_author(db=db, author=author)
-    url = request.headers.get('HX-Current-URL').split('/')[-1]
-    if request.headers.get('HX-Request') and url == 'authors':
-        return templates.TemplateResponse('authors/partials/show_add_author_form.html', {"request": request})
-    elif request.headers.get('HX-Request') and url == '':
-        return templates.TemplateResponse('books/partials/show_add_form.html', {"request": request})
+    url = request.headers.get("HX-Current-URL").split("/")[-1]
+    if request.headers.get("HX-Request") and url == "authors":
+        return templates.TemplateResponse(
+            "authors/partials/show_add_author_form.html", {"request": request}
+        )
+    elif request.headers.get("HX-Request") and url == "":
+        return templates.TemplateResponse(
+            "books/partials/show_add_form.html", {"request": request}
+        )
     else:
         pass
     return RedirectResponse(url="/", status_code=302)
 
 
-@app.get("/authors/cancel_add")
+@app.get("/authors/cancel_add", response_class=HTMLResponse)
 def cancel_author(request: Request):
-    url = request.headers.get('HX-Current-URL').split('/')[-1]
-    if url == 'authors':
-        return templates.TemplateResponse('authors/partials/show_add_author_form.html', {"request": request})
-    return templates.TemplateResponse('books/partials/show_add_form.html', {"request": request})
+    url = request.headers.get("HX-Current-URL").split("/")[-1]
+    if url == "authors":
+        return templates.TemplateResponse(
+            "authors/partials/show_add_author_form.html", {"request": request}
+        )
+    return templates.TemplateResponse(
+        "books/partials/show_add_form.html", {"request": request}
+    )
 
 
-@app.get("/authors/close_books/{author_id}")
+@app.get("/authors/close_books/{author_id}", response_class=HTMLResponse)
 def close_authors_books(request: Request, author_id: int):
-    return templates.TemplateResponse('authors/partials/show_books.html', {"request": request, "author_id": author_id})
+    return templates.TemplateResponse(
+        "authors/partials/show_books.html", {"request": request, "author_id": author_id}
+    )
 
 
-@app.get("/authors")
+@app.get("/authors", response_class=HTMLResponse)
 def show_authors(request: Request, db: Session = Depends(get_db)):
     vm = showauthors.ShowAuthorsViewModel(db=db)
     authors = vm.authors
-    return templates.TemplateResponse('authors/authors.html', {"request": request, "authors": authors})
+    return templates.TemplateResponse(
+        "authors/authors.html", {"request": request, "authors": authors}
+    )
 
 
-@app.get("/author/books/{author_id}")
+@app.get("/author/books/{author_id}", response_class=HTMLResponse)
 def authors_books(request: Request, author_id: int, db: Session = Depends(get_db)):
     vm = authorbooks.AuthorBooksViewModel(db=db, author_id=author_id)
     books = vm.books
-    return templates.TemplateResponse('authors/partials/authors_books.html',
-                                      {"request": request, "books": books, "author_id": author_id})
+    return templates.TemplateResponse(
+        "authors/partials/authors_books.html",
+        {"request": request, "books": books, "author_id": author_id},
+    )
 
 
-@app.get("/books/add")
+@app.get("/books/add", response_class=HTMLResponse)
 def add_book(request: Request, db: Session = Depends(get_db)):
     vm = addbookviewmodel.AddBookViewModel(db=db)
     data = vm.to_dict()
-    return templates.TemplateResponse('books/partials/add_books_form.html', {"request": request, "data": data})
+    return templates.TemplateResponse(
+        "books/partials/add_books_form.html", {"request": request, "data": data}
+    )
 
 
-@app.post("/books/add")
-def book_add(title: str = Form(...), pages: str = Form(...), author_id: str = Form(...), db: Session = Depends(get_db)):
+@app.post("/books/add",response_class=HTMLResponse)
+def book_add(
+    title: str = Form(...),
+    pages: str = Form(...),
+    author_id: str = Form(...),
+    db: Session = Depends(get_db),
+):
     db_book = dbs.get_book(db, title=title)
     if db_book:
         raise HTTPException(status_code=400, detail="Book already exists.")
@@ -108,21 +142,31 @@ def book_add(title: str = Form(...), pages: str = Form(...), author_id: str = Fo
     return RedirectResponse(url="/", status_code=302)
 
 
-@app.get("/books/cancel_add")
+@app.get("/books/cancel_add",response_class=HTMLResponse)
 def cancel_add(request: Request):
-    return templates.TemplateResponse('books/partials/show_add_form.html', {"request": request})
+    return templates.TemplateResponse(
+        "books/partials/show_add_form.html", {"request": request}
+    )
 
 
-@app.get("/books")
+@app.get("/books", response_class=HTMLResponse)
 def get_books(request: Request, db: Session = Depends(get_db)):
     vm = showbooks.ShowBooksViewModel(db=db)
     books = vm.books
-    return templates.TemplateResponse('books/books.html', {"request": request, "books": books, "search_text": ""})
+    return templates.TemplateResponse(
+        "books/books.html", {"request": request, "books": books, "search_text": ""}
+    )
 
 
-@app.get("/books/search")
+@app.get("/books/search", response_class=HTMLResponse)
 def search_books(request: Request, search_text: str, db: Session = Depends(get_db)):
     vm = searchbooks.SearchViewModel(db=db, search_text=search_text)
-    if request.headers.get('HX-Request'):
-        return templates.TemplateResponse("books/partials/search_results.html", {"request": request, "books": vm.books})
-    return templates.TemplateResponse('books/books.html', {"request": request, "books": vm.books, "search_text": search_text})
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            "books/partials/search_results.html",
+            {"request": request, "books": vm.books},
+        )
+    return templates.TemplateResponse(
+        "books/books.html",
+        {"request": request, "books": vm.books, "search_text": search_text},
+    )

@@ -17,9 +17,12 @@ def get_authors(db: Session, skip: int = 0, limit: int = 100):
 def get_all_authors(db: Session):
     return db.query(models.Authors).all()
 
+
 def create_author(db: Session, author: AuthorCreate):
     print(f"create author {author}")
-    db_author = models.Authors(first_name=author.first_name, last_name=author.last_name, email=author.email)
+    db_author = models.Authors(
+        first_name=author.first_name, last_name=author.last_name, email=author.email
+    )
     db.add(db_author)
     db.commit()
     db.refresh(db_author)
