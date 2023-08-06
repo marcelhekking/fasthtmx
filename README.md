@@ -1,4 +1,4 @@
-# Fast-HTMX
+# Marcel's Fast-HTMX
 
 ## Description
 Fast-HTMX is a demo project of [FastAPI](https://fastapi.tiangolo.com) and [HTMX](https://htmx.org).  The purpose of this project
