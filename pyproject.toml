@@ -1,0 +1,29 @@
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "Marcel Hekking", email = "marcelhekking@fmail.com"},
+]
+dependencies = [
+    "fastapi>=0.70.0",
+    "Jinja2>=3.0.2",
+    "SQLAlchemy>=1.4.25",
+    "python-multipart==0.0.5",
+    "uvicorn>=0.15.0",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[[tool.pdm.autoexport]]
+filename = "requirements.txt"
+groups = ["default", "test"]
+format = "requirements"
+without-hashes = true
